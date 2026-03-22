@@ -12,7 +12,7 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 # Gemini Pro Response
 def get_gemini_repsonse(input):
     # Assigning the Model
-    model=genai.GenerativeModel('gemini-pro')
+    model=genai.GenerativeModel('gemini-flash-latest')
     response=model.generate_content(input)
     return response.text
 
@@ -47,7 +47,14 @@ uploaded_file=st.file_uploader("Upload Your Resume",type="pdf",help="Please upla
 submit = st.button("Submit")
 
 if submit:
-    if uploaded_file is not None:
+    if uploaded_file is not None and jd.strip():
         text=input_pdf_text(uploaded_file)
-        response=get_gemini_repsonse(input_prompt)
-        st.subheader(response)
+        formatted_prompt = input_prompt.format(text=text, jd=jd)
+        response=get_gemini_repsonse(formatted_prompt)
+        try:
+            result = json.loads(response)
+            st.json(result)
+        except json.JSONDecodeError:
+            st.error("Failed to parse response. Raw output: " + response)
+    else:
+        st.error("Please provide both a job description and upload a resume PDF.")
